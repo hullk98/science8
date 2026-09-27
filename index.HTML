@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تحدي 85 سؤال</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#0f172a;color:#e5e7eb;min-height:100vh}
+.wrap{max-width:900px;margin:auto;padding:28px 18px} .card{background:#111827;border:1px solid #334155;border-radius:22px;padding:28px;box-shadow:0 20px 60px #0005}
+h1{margin:0 0 8px;font-size:32px} .sub{color:#94a3b8;margin-bottom:22px}
+button{border:0;border-radius:12px;padding:12px 18px;font-size:16px;cursor:pointer;font-weight:700} .primary{background:#22c55e;color:#052e16}
+.secondary{background:#334155;color:#fff} .danger{background:#ef4444;color:white}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center} .hidden{display:none!important}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px}
+.badge{padding:7px 12px;border-radius:999px;background:#1e293b;color:#cbd5e1}
+.timer{font-size:28px;font-weight:900;min-width:100px;text-align:center;color:#facc15}
+.progress{height:10px;background:#1e293b;border-radius:99px;overflow:hidden;margin:14px 0 24px} .bar{height:100%;background:#22c55e;width:0;transition:.2s}
+.q{font-size:25px;line-height:1.7;margin:22px 0} .options{display:grid;gap:12px} .opt{background:#1e293b;color:#fff;text-align:right;border:1px solid #475569} .opt:hover{background:#334155} .opt.correct{background:#166534;border-color:#22c55e} .opt.wrong{background:#7f1d1d;border-color:#ef4444}
+.feedback{min-height:32px;margin:18px 0;font-weight:700} .score{font-size:48px;font-weight:900;margin:20px 0}
+.small{font-size:14px;color:#94a3b8} .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0} .stat{background:#1e293b;padding:15px;border-radius:14px;text-align:center} .stat b{display:block;font-size:25px;color:#fff}
+input{padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:16px}
+
+.teamGrid,.categoryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:15px 0}
+.teamGrid>div{background:#1e293b;padding:15px;border-radius:14px}
+.teamGrid label{display:block;margin-bottom:8px;font-weight:bold}
+.teamGrid input,.categoryGrid button,#questionCount{width:100%;padding:12px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff}
+.categoryGrid{grid-template-columns:repeat(3,1fr)}
+.categoryGrid button{cursor:pointer;font-weight:bold}
+.categoryGrid button.selected{background:#166534;border-color:#22c55e}
+.teamScores{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}
+.teamScore{background:#1e293b;border-radius:14px;padding:12px;text-align:center}
+.teamScore b{display:block;font-size:26px}
+@media(max-width:700px){.teamGrid,.categoryGrid,.teamScores{grid-template-columns:1fr}}
+</style></head>
+<body><div class="wrap"><div class="card">
+<section id="start" class="hidden">
+<h1>🏆 تحدي 85 سؤال</h1>
+<div class="sub">رياضيات • English • علوم • لغتي • معلومات عامة • ألغاز</div>
+<p>85 سؤالًا متدرجًا من السهل إلى الصعب. السهل <b>15 ثانية</b>، المتوسط <b>45 ثانية</b>، الصعب <b>90 ثانية</b>.</p>
+<div class="row"><input id="name" placeholder="اسم اللاعب (اختياري)"><button class="primary" onclick="startGame()">ابدأ التحدي</button></div>
+<p class="small">عند انتهاء الوقت ينتقل البرنامج للسؤال التالي تلقائيًا.</p>
+</section>
+
+
+<section id="teamSetup">
+<h1>🏆 مسابقة 3 فرق</h1>
+<p class="sub">اختر أسماء الفرق والفقرات التي تريد استخدامها في المسابقة.</p>
+<div class="teamGrid">
+  <div><label>الفريق الأول</label><input id="team1" value="الفريق 1"></div>
+  <div><label>الفريق الثاني</label><input id="team2" value="الفريق 2"></div>
+  <div><label>الفريق الثالث</label><input id="team3" value="الفريق 3"></div>
+</div>
+<h2>اختر الفقرات</h2>
+<div id="categoryPicker" class="categoryGrid"></div>
+<h2>عدد الأسئلة</h2>
+<select id="questionCount">
+  <option value="15">15 سؤال</option><option value="30" selected>30 سؤال</option>
+  <option value="45">45 سؤال</option><option value="60">60 سؤال</option>
+  <option value="85">كل الأسئلة</option>
+</select>
+<p class="small">سيتم أخذ الأسئلة من الفقرات التي اخترتها، وتبقى مستويات السهل والمتوسط والصعب والمؤقت كما هي.</p>
+<button class="primary" onclick="beginTeams()">ابدأ المسابقة</button>
+</section>
+<section id="game" class="hidden">
+<div class="top"><div><span id="num" class="badge"></span> <span id="cat" class="badge"></span> <span id="diff" class="badge"></span></div><div id="timer" class="timer">15</div></div>
+<div class="teamScores"><div class="teamScore"><span id="tn1">الفريق 1</span><b id="ts1">0</b></div><div class="teamScore"><span id="tn2">الفريق 2</span><b id="ts2">0</b></div><div class="teamScore"><span id="tn3">الفريق 3</span><b id="ts3">0</b></div></div><div class="progress"><div id="bar" class="bar"></div></div>
+<div id="question" class="q"></div>
+<div id="options" class="options"></div>
+<div id="feedback" class="feedback"></div>
+<div class="row"><button id="next" class="secondary hidden" onclick="nextQuestion()">التالي</button></div>
+</section>
+
+<section id="result" class="hidden">
+<h1>🎉 انتهى التحدي!</h1><div id="finalScore" class="score"></div>
+<div class="stats"><div class="stat">الصحيح<b id="correctCount">0</b></div><div class="stat">الخطأ<b id="wrongCount">0</b></div><div class="stat">النسبة<b id="percent">0%</b></div></div>
+<p id="resultText"></p><button class="primary" onclick="location.reload()">إعادة التحدي</button>
+</section>
+</div></div>
+<script>
+const questions = [{"id": 1, "category": "رياضيات", "question": "ما ناتج 7 + 5؟", "options": ["10", "12", "13", "14"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 2, "category": "رياضيات", "question": "ما ناتج 9 × 3؟", "options": ["18", "21", "27", "30"], "answer": 2, "difficulty": "سهل", "seconds": 15}, {"id": 3, "category": "رياضيات", "question": "ما ناتج 20 - 8؟", "options": ["10", "11", "12", "14"], "answer": 2, "difficulty": "سهل", "seconds": 15}, {"id": 4, "category": "رياضيات", "question": "ما نصف العدد 18؟", "options": ["6", "8", "9", "10"], "answer": 2, "difficulty": "سهل", "seconds": 15}, {"id": 5, "category": "رياضيات", "question": "كم ضلعًا للمربع؟", "options": ["3", "4", "5", "6"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 6, "category": "إنجليزي", "question": "What is the opposite of 'hot'?", "options": ["Cold", "Fast", "Tall", "Big"], "answer": 0, "difficulty": "سهل", "seconds": 15}, {"id": 7, "category": "إنجليزي", "question": "What is the plural of 'book'?", "options": ["Bookes", "Books", "Book's", "Book"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 8, "category": "إنجليزي", "question": "Choose: 'I ___ a student.'", "options": ["am", "is", "are", "be"], "answer": 0, "difficulty": "سهل", "seconds": 15}, {"id": 9, "category": "علوم", "question": "ما الكوكب المعروف بالكوكب الأحمر؟", "options": ["الأرض", "المريخ", "الزهرة", "المشتري"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 10, "category": "علوم", "question": "ما الغاز الذي نتنفسه بشكل أساسي للبقاء؟", "options": ["الأكسجين", "الهيدروجين", "ثاني أكسيد الكربون", "الهيليوم"], "answer": 0, "difficulty": "سهل", "seconds": 15}, {"id": 11, "category": "لغتي", "question": "ما جمع كلمة «كتاب»؟", "options": ["كاتب", "كتب", "مكتبة", "كتابة"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 12, "category": "لغتي", "question": "ما ضد كلمة «كبير»؟", "options": ["طويل", "صغير", "قوي", "سريع"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 13, "category": "عامة", "question": "ما عاصمة المملكة العربية السعودية؟", "options": ["جدة", "الرياض", "مكة", "الدمام"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 14, "category": "عامة", "question": "كم عدد أيام الأسبوع؟", "options": ["5", "6", "7", "8"], "answer": 2, "difficulty": "سهل", "seconds": 15}, {"id": 15, "category": "ألغاز", "question": "شيء له أسنان ولا يعض، ما هو؟", "options": ["المشط", "الكرسي", "القلم", "الباب"], "answer": 0, "difficulty": "سهل", "seconds": 15}, {"id": 16, "category": "رياضيات", "question": "ما ناتج 36 ÷ 6؟", "options": ["5", "6", "7", "8"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 17, "category": "رياضيات", "question": "ما العدد الذي يأتي بعد 99؟", "options": ["98", "100", "101", "109"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 18, "category": "إنجليزي", "question": "What does 'cat' mean?", "options": ["كلب", "قطة", "حصان", "طائر"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 19, "category": "إنجليزي", "question": "Choose the correct word: 'She ___ happy.'", "options": ["am", "are", "is", "be"], "answer": 2, "difficulty": "سهل", "seconds": 15}, {"id": 20, "category": "علوم", "question": "أي جزء من النبات يمتص الماء من التربة؟", "options": ["الزهرة", "الجذر", "الثمرة", "الساق"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 21, "category": "علوم", "question": "في أي حالة يكون الماء عند التجمد؟", "options": ["غاز", "سائل", "صلب", "بلازما"], "answer": 2, "difficulty": "سهل", "seconds": 15}, {"id": 22, "category": "لغتي", "question": "ما مفرد كلمة «أشجار»؟", "options": ["شجرة", "شجير", "أشجر", "شجرةان"], "answer": 0, "difficulty": "سهل", "seconds": 15}, {"id": 23, "category": "لغتي", "question": "أي كلمة تُعد اسمًا؟", "options": ["يكتب", "جميل", "مدرسة", "ذهب"], "answer": 2, "difficulty": "سهل", "seconds": 15}, {"id": 24, "category": "عامة", "question": "كم شهرًا في السنة؟", "options": ["10", "11", "12", "13"], "answer": 2, "difficulty": "سهل", "seconds": 15}, {"id": 25, "category": "عامة", "question": "ما أكبر محيط على الأرض؟", "options": ["الأطلسي", "الهندي", "الهادئ", "المتجمد الشمالي"], "answer": 2, "difficulty": "سهل", "seconds": 15}, {"id": 26, "category": "ألغاز", "question": "ما الشيء الذي كلما أخذت منه كبر؟", "options": ["الحفرة", "الكتاب", "العمر", "الطريق"], "answer": 0, "difficulty": "سهل", "seconds": 15}, {"id": 27, "category": "ألغاز", "question": "شيء يمشي بلا أرجل ويبكي بلا عيون، ما هو؟", "options": ["السحاب", "الكرسي", "الساعة", "القلم"], "answer": 0, "difficulty": "سهل", "seconds": 15}, {"id": 28, "category": "رياضيات", "question": "إذا كان معك 15 ريالًا وأنفقت 7، فكم يتبقى؟", "options": ["6", "7", "8", "9"], "answer": 2, "difficulty": "سهل", "seconds": 15}, {"id": 29, "category": "علوم", "question": "ما العضو الذي يضخ الدم في جسم الإنسان؟", "options": ["الرئة", "القلب", "المعدة", "الكبد"], "answer": 1, "difficulty": "سهل", "seconds": 15}, {"id": 30, "category": "عامة", "question": "كم عدد ألوان قوس قزح المعروفة تقليديًا؟", "options": ["5", "6", "7", "8"], "answer": 2, "difficulty": "سهل", "seconds": 15}, {"id": 31, "category": "رياضيات", "question": "ما ناتج 15% من 200؟", "options": ["20", "25", "30", "35"], "answer": 2, "difficulty": "متوسط", "seconds": 45}, {"id": 32, "category": "رياضيات", "question": "إذا كان x + 7 = 19، فما قيمة x؟", "options": ["10", "11", "12", "13"], "answer": 2, "difficulty": "متوسط", "seconds": 45}, {"id": 33, "category": "رياضيات", "question": "ما محيط مربع طول ضلعه 6 سم؟", "options": ["12", "18", "24", "36"], "answer": 2, "difficulty": "متوسط", "seconds": 45}, {"id": 34, "category": "رياضيات", "question": "ما ناتج 3/4 من 40؟", "options": ["20", "25", "30", "35"], "answer": 2, "difficulty": "متوسط", "seconds": 45}, {"id": 35, "category": "رياضيات", "question": "عدد إذا ضربته في 5 ثم أضفت 3 أصبح 28، ما العدد؟", "options": ["4", "5", "6", "7"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 36, "category": "إنجليزي", "question": "Choose: 'They ___ playing football.'", "options": ["is", "am", "are", "be"], "answer": 2, "difficulty": "متوسط", "seconds": 45}, {"id": 37, "category": "إنجليزي", "question": "What is the past tense of 'go'?", "options": ["goed", "went", "gone", "going"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 38, "category": "إنجليزي", "question": "Choose the correct sentence.", "options": ["He don't like tea.", "He doesn't like tea.", "He doesn't likes tea.", "He not like tea."], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 39, "category": "إنجليزي", "question": "What does 'although' usually express?", "options": ["سبب", "تباين/تناقض", "وقت", "مكان"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 40, "category": "إنجليزي", "question": "Complete: 'If I study, I ___ pass.'", "options": ["would", "will", "was", "am"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 41, "category": "علوم", "question": "ما العملية التي تصنع بها النباتات غذاءها؟", "options": ["التنفس", "البناء الضوئي", "الهضم", "التبخر"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 42, "category": "علوم", "question": "ما وحدة قياس القوة في النظام الدولي؟", "options": ["جول", "نيوتن", "واط", "باسكال"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 43, "category": "علوم", "question": "أي طبقة من الغلاف الجوي تحدث فيها معظم الظواهر الجوية؟", "options": ["التروبوسفير", "الستراتوسفير", "الميزوسفير", "الإكسوسفير"], "answer": 0, "difficulty": "متوسط", "seconds": 45}, {"id": 44, "category": "علوم", "question": "ما المادة التي يتغير حجمها وشكلها بسهولة لتأخذ شكل الوعاء؟", "options": ["الصلب", "السائل", "الغاز فقط", "الخشب"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 45, "category": "علوم", "question": "ما مصدر الطاقة الرئيسي للأرض؟", "options": ["القمر", "الشمس", "الرياح", "البحر"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 46, "category": "لغتي", "question": "ما نوع كلمة «سريع» في جملة «حصان سريع»؟", "options": ["اسم", "فعل", "صفة", "حرف"], "answer": 2, "difficulty": "متوسط", "seconds": 45}, {"id": 47, "category": "لغتي", "question": "أي جملة مما يلي جملة فعلية؟", "options": ["السماء صافية.", "ذهب الطالب إلى المدرسة.", "الكتاب مفيد.", "الحديقة جميلة."], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 48, "category": "لغتي", "question": "ما الفعل في الجملة: «قرأ محمد القصة»؟", "options": ["محمد", "القصة", "قرأ", "الـ"], "answer": 2, "difficulty": "متوسط", "seconds": 45}, {"id": 49, "category": "لغتي", "question": "ما علامة رفع المبتدأ المفرد الأصلية؟", "options": ["الفتحة", "الكسرة", "الضمة", "السكون"], "answer": 2, "difficulty": "متوسط", "seconds": 45}, {"id": 50, "category": "لغتي", "question": "أي كلمة تحتوي همزة قطع؟", "options": ["استعمل", "أحمد", "ابن", "اسم"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 51, "category": "عامة", "question": "من أول إنسان وطأ سطح القمر؟", "options": ["نيل أرمسترونغ", "يوري غاغارين", "ألبرت أينشتاين", "توماس إديسون"], "answer": 0, "difficulty": "متوسط", "seconds": 45}, {"id": 52, "category": "عامة", "question": "ما أكبر قارة من حيث المساحة؟", "options": ["أفريقيا", "أوروبا", "آسيا", "أمريكا الجنوبية"], "answer": 2, "difficulty": "متوسط", "seconds": 45}, {"id": 53, "category": "عامة", "question": "ما عاصمة اليابان؟", "options": ["بكين", "طوكيو", "سيول", "بانكوك"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 54, "category": "عامة", "question": "ما الرمز الكيميائي للذهب؟", "options": ["Ag", "Au", "Fe", "Go"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 55, "category": "عامة", "question": "كم عدد الكواكب في المجموعة الشمسية؟", "options": ["7", "8", "9", "10"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 56, "category": "ألغاز", "question": "لديك 3 تفاحات، أخذتَ منها تفاحتين. كم تفاحة معك؟", "options": ["1", "2", "3", "0"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 57, "category": "ألغاز", "question": "ما الشيء الذي إذا كسرته لا تستطيع استخدامه كما كان؟", "options": ["الوعد", "الماء", "الهواء", "الظل"], "answer": 0, "difficulty": "متوسط", "seconds": 45}, {"id": 58, "category": "ألغاز", "question": "رجل خرج تحت المطر دون مظلة ولم يبتل شعره. لماذا؟", "options": ["المطر توقف", "كان أصلع", "كان داخل سيارة", "كان يرتدي قبعة"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 59, "category": "ألغاز", "question": "ما العدد التالي: 2، 4، 8، 16، ؟", "options": ["20", "24", "30", "32"], "answer": 3, "difficulty": "متوسط", "seconds": 45}, {"id": 60, "category": "ألغاز", "question": "أم أحمد لديها أربعة أبناء: شمال، جنوب، شرق... ما اسم الرابع؟", "options": ["غرب", "أحمد", "شمال", "وسط"], "answer": 1, "difficulty": "متوسط", "seconds": 45}, {"id": 61, "category": "رياضيات", "question": "إذا كان 2x - 5 = 17، فما قيمة x؟", "options": ["9", "10", "11", "12"], "answer": 2, "difficulty": "صعب", "seconds": 90}, {"id": 62, "category": "رياضيات", "question": "ما مساحة مثلث قاعدته 10 سم وارتفاعه 8 سم؟", "options": ["18", "40", "80", "90"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 63, "category": "رياضيات", "question": "ما قيمة 2^5 + 3^2؟", "options": ["35", "39", "41", "45"], "answer": 2, "difficulty": "صعب", "seconds": 90}, {"id": 64, "category": "رياضيات", "question": "إذا كان سعر سلعة 240 ريالًا وبعد خصم 25%، فما السعر الجديد؟", "options": ["160", "170", "180", "200"], "answer": 2, "difficulty": "صعب", "seconds": 90}, {"id": 65, "category": "رياضيات", "question": "ما متوسط الأعداد 8، 12، 15، 5؟", "options": ["8", "9", "10", "11"], "answer": 2, "difficulty": "صعب", "seconds": 90}, {"id": 66, "category": "رياضيات", "question": "قطار يقطع 180 كم في 2.5 ساعة. ما سرعته المتوسطة؟", "options": ["60 كم/س", "72 كم/س", "75 كم/س", "90 كم/س"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 67, "category": "رياضيات", "question": "إذا كان محيط دائرة 20π سم، فما نصف قطرها؟", "options": ["5", "10", "20", "40"], "answer": 0, "difficulty": "صعب", "seconds": 90}, {"id": 68, "category": "رياضيات", "question": "حل المعادلة: 3(x - 2) = 21", "options": ["7", "8", "9", "10"], "answer": 2, "difficulty": "صعب", "seconds": 90}, {"id": 69, "category": "إنجليزي", "question": "Choose the correct conditional: 'If I had known, I ___ you.'", "options": ["will tell", "would have told", "tell", "would tell"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 70, "category": "إنجليزي", "question": "Which sentence is grammatically correct?", "options": ["Neither of them are ready.", "Neither of them is ready.", "Neither them is ready.", "Neither of them be ready."], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 71, "category": "إنجليزي", "question": "What is the closest meaning of 'reluctant'?", "options": ["eager", "unwilling", "certain", "excited"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 72, "category": "إنجليزي", "question": "Complete: 'By the time we arrived, the movie ___.'", "options": ["starts", "has started", "had started", "will start"], "answer": 2, "difficulty": "صعب", "seconds": 90}, {"id": 73, "category": "إنجليزي", "question": "Which word is closest in meaning to 'accurate'?", "options": ["precise", "ancient", "rapid", "ordinary"], "answer": 0, "difficulty": "صعب", "seconds": 90}, {"id": 74, "category": "علوم", "question": "جسم كتلته 4 كجم تؤثر عليه قوة مقدارها 20 نيوتن. ما تسارعه؟", "options": ["4 م/ث²", "5 م/ث²", "16 م/ث²", "80 م/ث²"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 75, "category": "علوم", "question": "إذا كانت سرعة جسم ثابتة في خط مستقيم، فإن محصلة القوى عليه تكون:", "options": ["صفرًا", "أكبر ما يمكن", "متغيرة دائمًا", "سالبة دائمًا"], "answer": 0, "difficulty": "صعب", "seconds": 90}, {"id": 76, "category": "علوم", "question": "ما الرقم الهيدروجيني لمحلول متعادل عند 25°C تقريبًا؟", "options": ["0", "5", "7", "14"], "answer": 2, "difficulty": "صعب", "seconds": 90}, {"id": 77, "category": "علوم", "question": "أي عضية تُعرف بأنها مركز إنتاج الطاقة في الخلية؟", "options": ["النواة", "الميتوكوندريا", "الريبوسوم", "الجدار الخلوي"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 78, "category": "علوم", "question": "ما نوع الرابطة التي تنتج عن مشاركة الإلكترونات بين الذرات؟", "options": ["أيونية", "تساهمية", "فلزية", "نووية"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 79, "category": "لغتي", "question": "في جملة «إنَّ الطالبَ مجتهدٌ»، ما إعراب «الطالب»؟", "options": ["مبتدأ مرفوع", "اسم إن منصوب", "خبر إن مرفوع", "فاعل مرفوع"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 80, "category": "لغتي", "question": "ما الأسلوب في «لا تهملْ واجبك»؟", "options": ["استفهام", "نهي", "أمر", "تعجب"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 81, "category": "لغتي", "question": "أي الجمل الآتية تحتوي مفعولًا مطلقًا؟", "options": ["نجح الطالب نجاحًا كبيرًا.", "ذهب الطالب إلى المدرسة.", "الجو جميل.", "قرأ الطالب الكتاب."], "answer": 0, "difficulty": "صعب", "seconds": 90}, {"id": 82, "category": "لغتي", "question": "ما نوع «ما» في جملة «ما أجملَ السماء!»؟", "options": ["نافية", "استفهامية", "تعجبية", "موصولة"], "answer": 2, "difficulty": "صعب", "seconds": 90}, {"id": 83, "category": "عامة", "question": "إذا كانت الساعة 3:00 في توقيت UTC، فكم تكون في السعودية (UTC+3)؟", "options": ["12:00", "3:00", "6:00", "9:00"], "answer": 2, "difficulty": "صعب", "seconds": 90}, {"id": 84, "category": "عامة", "question": "ما الدولة التي تُعرف بأنها أكبر دولة من حيث المساحة؟", "options": ["الصين", "كندا", "روسيا", "الولايات المتحدة"], "answer": 2, "difficulty": "صعب", "seconds": 90}, {"id": 85, "category": "عامة", "question": "ما العنصر الأكثر وفرة في الكون من حيث الكتلة؟", "options": ["الأكسجين", "الهيدروجين", "الكربون", "الحديد"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 86, "category": "ألغاز", "question": "لديك 8 كرات، واحدة منها أثقل من البقية، وميزان ذو كفتين. ما أقل عدد من الوزنات اللازمة لمعرفة الكرة الأثقل؟", "options": ["1", "2", "3", "4"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 87, "category": "ألغاز", "question": "رجل ينظر إلى صورة ويقول: «ليس لي أخ ولا أخت، لكن والد هذا الرجل هو ابن أبي». من في الصورة؟", "options": ["ابنه", "والده", "عمه", "نفسه"], "answer": 0, "difficulty": "صعب", "seconds": 90}, {"id": 88, "category": "ألغاز", "question": "لديك حبلان، كل واحد يحترق في ساعة لكن الاحتراق غير منتظم. كيف تقيس 45 دقيقة؟", "options": ["إشعال حبل من طرف واحد فقط", "إشعال الأول من الطرفين والثاني من طرف واحد، ثم إشعال الطرف الآخر للثاني عند انتهاء الأول", "إشعال الحبلين من طرف واحد", "لا يمكن"], "answer": 1, "difficulty": "صعب", "seconds": 90}, {"id": 89, "category": "ألغاز", "question": "ما العدد المفقود: 1، 1، 2، 3، 5، 8، ؟", "options": ["11", "12", "13", "15"], "answer": 2, "difficulty": "صعب", "seconds": 90}];
+let idx=0, score=0, answered=false, timeLeft=0, interval=null, correct=0, wrong=0;
+function startGame(){document.getElementById('start').classList.add('hidden');document.getElementById('game').classList.remove('hidden');render();}
+function render(){
+ const q=questions[idx]; answered=false; timeLeft=q.seconds;
+ document.getElementById('num').textContent=`السؤال ${idx+1} من ${questions.length}`;
+ document.getElementById('cat').textContent=q.category; document.getElementById('diff').textContent=q.difficulty;
+ document.getElementById('question').textContent=q.question;
+ document.getElementById('feedback').textContent='';
+ document.getElementById('next').classList.add('hidden');
+ document.getElementById('bar').style.width=((idx)/questions.length*100)+'%';
+ const box=document.getElementById('options'); box.innerHTML='';
+ q.options.forEach((o,i)=>{const b=document.createElement('button');b.className='opt';b.textContent=o;b.onclick=()=>answer(i);box.appendChild(b);});
+ startTimer();
+}
+function startTimer(){clearInterval(interval);updateTimer();interval=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=0){clearInterval(interval);if(!answered){answered=true;wrong++;showAnswer(-1);document.getElementById('feedback').textContent='⏰ انتهى الوقت!';document.getElementById('next').classList.remove('hidden');}}},1000);}
+function updateTimer(){document.getElementById('timer').textContent=timeLeft;}
+function answer(i){if(answered)return;answered=true;clearInterval(interval);const q=questions[idx];if(i===q.answer){correct++;score++;document.getElementById('feedback').textContent='✅ إجابة صحيحة!';}else{wrong++;document.getElementById('feedback').textContent='❌ إجابة غير صحيحة';}showAnswer(i);document.getElementById('next').classList.remove('hidden');}
+function showAnswer(i){document.querySelectorAll('.opt').forEach((b,n)=>{b.disabled=true;if(n===questions[idx].answer)b.classList.add('correct');if(i===n && i!==questions[idx].answer)b.classList.add('wrong');});}
+function nextQuestion(){if(idx<questions.length-1){idx++;render();}else finish();}
+function finish(){clearInterval(interval);document.getElementById('game').classList.add('hidden');document.getElementById('result').classList.remove('hidden');const p=Math.round(correct/questions.length*100);document.getElementById('finalScore').textContent=`${score} / ${questions.length}`;document.getElementById('correctCount').textContent=correct;document.getElementById('wrongCount').textContent=wrong;document.getElementById('percent').textContent=p+'%';document.getElementById('resultText').textContent=(document.getElementById('name').value?document.getElementById('name').value+'، ':'')+'أحسنت! يمكنك إعادة التحدي لتجربة نتيجة جديدة.';}
+
+// ===== نظام الفرق واختيار الفقرات =====
+let teamNames=["الفريق 1","الفريق 2","الفريق 3"], teamScores=[0,0,0], currentTeam=0, selectedCategories=new Set(), teamPool=[];
+const categoryNames=[...new Set(questions.map(q=>q.category))];
+const picker=document.getElementById("categoryPicker");
+categoryNames.forEach(c=>{
+  const b=document.createElement("button"); b.textContent=c; b.className="selected";
+  selectedCategories.add(c);
+  b.onclick=()=>{ if(selectedCategories.has(c)){selectedCategories.delete(c);b.classList.remove("selected")}
+                  else {selectedCategories.add(c);b.classList.add("selected")} };
+  picker.appendChild(b);
+});
+function beginTeams(){
+  if(!selectedCategories.size){alert("اختر فقرة واحدة على الأقل");return;}
+  teamNames=[
+    document.getElementById("team1").value.trim()||"الفريق 1",
+    document.getElementById("team2").value.trim()||"الفريق 2",
+    document.getElementById("team3").value.trim()||"الفريق 3"
+  ];
+  const count=Number(document.getElementById("questionCount").value);
+  teamPool=questions.filter(q=>selectedCategories.has(q.category)).slice(0,count);
+  if(!teamPool.length){alert("لا توجد أسئلة في الفقرات المختارة");return;}
+  idx=0; score=0; correct=0; wrong=0; currentTeam=0; teamScores=[0,0,0];
+  document.getElementById("teamSetup").classList.add("hidden");
+  document.getElementById("game").classList.remove("hidden");
+  document.getElementById("tn1").textContent=teamNames[0];
+  document.getElementById("tn2").textContent=teamNames[1];
+  document.getElementById("tn3").textContent=teamNames[2];
+  renderTeamQuestion();
+}
+function renderTeamQuestion(){
+  const q=teamPool[idx]; answered=false; timeLeft=q.seconds;
+  document.getElementById("num").textContent=`السؤال ${idx+1} من ${teamPool.length}`;
+  document.getElementById("cat").textContent=q.category; document.getElementById("diff").textContent=q.difficulty;
+  document.getElementById("timer").textContent=timeLeft;
+  document.getElementById("question").textContent=q.question;
+  document.getElementById("feedback").textContent=`دور: ${teamNames[currentTeam]}`;
+  document.getElementById("next").classList.add("hidden");
+  document.getElementById("bar").style.width=(idx/teamPool.length*100)+"%";
+  const box=document.getElementById("options"); box.innerHTML="";
+  q.options.forEach((o,i)=>{const b=document.createElement("button");b.className="opt";b.textContent=o;b.onclick=()=>teamAnswer(i);box.appendChild(b)});
+  clearInterval(interval); updateTimer();
+  interval=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=0){clearInterval(interval);if(!answered){answered=true;wrong++;showAnswer(-1);document.getElementById("feedback").textContent=`⏰ انتهى الوقت — ${teamNames[currentTeam]} لا يحصل على نقطة`;document.getElementById("next").classList.remove("hidden")}}},1000);
+}
+function teamAnswer(i){
+  if(answered)return; answered=true; clearInterval(interval);
+  const q=teamPool[idx];
+  if(i===q.answer){teamScores[currentTeam]++;document.getElementById("ts"+(currentTeam+1)).textContent=teamScores[currentTeam];document.getElementById("feedback").textContent=`✅ صحيحة! نقطة لـ ${teamNames[currentTeam]}`;correct++}
+  else{document.getElementById("feedback").textContent=`❌ خاطئة — الإجابة الصحيحة: ${q.options[q.answer]}`;wrong++}
+  showAnswer(i);document.getElementById("next").classList.remove("hidden");
+}
+function nextQuestion(){
+  if(idx>=teamPool.length-1){finishTeams();return;}
+  idx++;currentTeam=(currentTeam+1)%3;renderTeamQuestion();
+}
+function finishTeams(){
+  clearInterval(interval);document.getElementById("game").classList.add("hidden");document.getElementById("result").classList.remove("hidden");
+  const max=Math.max(...teamScores), winners=teamNames.filter((n,i)=>teamScores[i]===max);
+  document.getElementById("finalScore").textContent=winners.join(" و ")+" — "+max+" نقطة";
+  document.getElementById("correctCount").textContent=teamScores.reduce((a,b)=>a+b,0);
+  document.getElementById("wrongCount").textContent=teamPool.length-teamScores.reduce((a,b)=>a+b,0);
+  document.getElementById("percent").textContent=Math.round(teamScores.reduce((a,b)=>a+b,0)/teamPool.length*100)+"%";
+  document.getElementById("resultText").textContent=teamNames.map((n,i)=>n+": "+teamScores[i]+" نقطة").join("  |  ");
+}
+</script></body></html>
